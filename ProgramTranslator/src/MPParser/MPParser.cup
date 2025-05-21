@@ -16,22 +16,22 @@ parser code {:
    public static void main( String[] args )
    {
       try
-	  {
-		   FileReader file = new FileReader( args[0] );
-		   Scanner scanner = new MPLexer( file );
-		   MPParser parser = new MPParser( scanner );
-		   parser.parse();
-		   parser.checkWarnings();
-		   if ( parser.errNo == 0 && parser.warnNo == 0 )
-		      System.out.println( "Analiza zavrsena. U kodu nema gresaka." );
-		   else
-		      System.out.println( "Analiza zavrsena. Broj gresaka: " + parser.errNo 
-		         + " Broj upozorenja: " + parser.warnNo );
-	  }
-	  catch( Exception e )
-	  {
-		   System.out.println(e);
-	  }
+      {
+           FileReader file = new FileReader( args[0] );
+           Scanner scanner = new MPLexer( file );
+           MPParser parser = new MPParser( scanner );
+           parser.parse();
+           parser.checkWarnings();
+           if ( parser.errNo == 0 && parser.warnNo == 0 )
+              System.out.println( "Analysis finished. No errors in the code." );
+           else
+              System.out.println( "Analysis finished. Number of errors: " + parser.errNo 
+                 + " Number of warnings: " + parser.warnNo );
+      }
+      catch( Exception e )
+      {
+           System.out.println(e);
+      }
    }
    
    public void checkWarnings()
@@ -39,44 +39,44 @@ parser code {:
       SymbolNode current = symbolTable.getVariables();
       while ( current != null )
       {
-      	Variable var = ( Variable ) current;
-      	if ( var.last_def != -1 && var.last_use == -1 )
-      	{
-      		System.out.println( "Upozorenje: Promenljiva " + var.name + 
-      			" je deklarisana, ali se nigde ne koristi." );
-      		warnNo++;
-      	}
-      	else if ( var.last_def > var.last_use )
-      	{
-      		System.out.println( "Upozorenje: Vrednost dodeljena promeljivoj " +
-      		    var.name + " u liniji " + var.last_def + " se nigde ne koristi." );
-      		warnNo++;
-      	}
-      	current = current.next;
+          Variable var = ( Variable ) current;
+          if ( var.last_def != -1 && var.last_use == -1 )
+          {
+              System.out.println( "Warning: Variable " + var.name + 
+                  " is declared but never used." );
+              warnNo++;
+          }
+          else if ( var.last_def > var.last_use )
+          {
+              System.out.println( "Warning: Value assigned to variable " +
+                  var.name + " at line " + var.last_def + " is never used." );
+              warnNo++;
+          }
+          current = current.next;
      }
    }
    
    public void syntax_error(Symbol cur_token)
    {
-   	  
+         
    }
    
    public void report_error(String message, Object info)
    {
-   	   System.out.print( message );
+          System.out.print( message );
    }
    
    public int getLine()
    {
-   	  return (( MPLexer) getScanner()).getLine();
+         return (( MPLexer) getScanner()).getLine();
    }
 :};
 
 init with {:
-	symbolTable = new SymbolTable();
+    symbolTable = new SymbolTable();
 :};
 
-// Terminali
+// Terminals
 terminal STRATEGY_BEGIN, STRATEGY_END, DECLARATION_BEGIN, DECLARATION_END, SEMICOLON, INT, DOUBLE, STRING, BOOL, CHAR;
 terminal REPEAT, OPEN_BRACKET, CLOSE_BRACKET, OPEN_CURLY_BRACKET, CLOSE_CURLY_BRACKET, LESS, EQUAL, GREATER, ASSIGN;
 terminal NUM_INSTANCES, SERVICE_BEGIN, SERVICE_END, SERVICE_NAME, EXECUTED_BY, IF, THEN, SCALE, REDEPLOY_ON, OPTIMIZE, PLUS, MULTIPLY;
@@ -88,7 +88,7 @@ terminal Character CHARCONST;
 terminal String STRINGCONST;
 
 
-// Neterminali
+// Nonterminals
 non terminal Body Strategy, Body, Declarations;
 non terminal VariableDeclaration, Variable;
 non terminal Instances, ServiceName, Allocation, Response;
@@ -106,7 +106,7 @@ non terminal RelExpression RelExpression, Condition;
 non terminal ArrayList Statements, ServiceList;
 
 
-// Gramatika
+// Grammar
 
 precedence nonassoc error;
 precedence left  PLUS;
@@ -118,12 +118,12 @@ Strategy ::= STRATEGY_BEGIN Body:b STRATEGY_END
             {:
                 RESULT = b;
             :}
-			;
+            ;
 
 Body ::= Declarations Statements:ss ServiceList:sl
-		{:
-			RESULT = new Body(ss, sl);
-		:}
+        {:
+            RESULT = new Body(ss, sl);
+        :}
         ;
 
 Declarations ::= DECLARATION_BEGIN VariableDeclaration DECLARATION_END
@@ -137,8 +137,8 @@ Variable ::= Type:t ID:id SEMICOLON
         {:			   
             if ( ! parser.symbolTable.addVar( id, t ) )
             {
-                System.out.println( "Greska u liniji " + parser.getLine() + ": " + 
-                "Promenljiva " + id + " je vec deklarisana." );
+                System.out.println( "Error at line " + parser.getLine() + ": " + 
+                "Variable " + id + " is already declared." );
                 parser.errNo++;
             }
         :}
@@ -211,8 +211,8 @@ Term ::= ID:id
             Variable var = parser.symbolTable.getVar( id );
             if ( var == null )
             {
-                System.out.println( "Greska u liniji " + parser.getLine() + 
-                    ": promenljiva " + id + " nije deklarisana.");
+                System.out.println( "Error at line " + parser.getLine() + 
+                    ": variable " + id + " is not declared.");
                 parser.errNo++;
             }
             else 
@@ -220,8 +220,8 @@ Term ::= ID:id
                 RESULT = new VariableTerm(var);
                 if ( var.last_def == -1 )
                 {
-                    System.out.println( "Grreska u liniji " + parser.getLine() + 
-                        ": promenljiva " + id + " nije inicijalizovana.");
+                    System.out.println( "Error at line " + parser.getLine() + 
+                        ": variable " + id + " is not initialized.");
                     parser.errNo++;
                 }
                 var.last_use = parser.getLine();
@@ -272,8 +272,8 @@ Assignment ::= ID:id ASSIGN Expression: e
             Variable var = parser.symbolTable.getVar( id );
             if ( var == null )
             {
-                System.out.println( "Greska u liniji " + parser.getLine() + 
-                    ": promenljiva " + id + " nije deklarisana.");
+                System.out.println( "Error at line " + parser.getLine() + 
+                    ": variable " + id + " is not declared.");
                 parser.errNo++;
             }
             else 
@@ -302,9 +302,9 @@ ServiceList ::= ServiceList:sl SEMICOLON ServiceDef:sd
         ;
 
 ServiceDef  ::= SERVICE_BEGIN ServiceName Instances Allocation AdaptationRule:a SERVICE_END
-		{:
-			RESULT = new ServiceDef(a);
-		:}
+        {:
+            RESULT = new ServiceDef(a);
+        :}
         ;
 
 ServiceName ::= SERVICE_NAME ID:id
@@ -312,16 +312,16 @@ ServiceName ::= SERVICE_NAME ID:id
             Variable var = parser.symbolTable.getVar( id );
             if ( var == null )
             {
-                System.out.println( "Greska u liniji " + parser.getLine() + 
-                    ": promenljiva " + id + " nije deklarisana.");
+                System.out.println( "Error at line " + parser.getLine() + 
+                    ": variable " + id + " is not declared.");
                 parser.errNo++;
             }
             else 
             {
                 if ( var.type.tkind != Type.CHAR )
                 {
-                    System.out.println( "Greska u liniji " + parser.getLine() + 
-                        ": Ime servisa mora biti tipa char." );
+                    System.out.println( "Error at line " + parser.getLine() + 
+                        ": Service name must be of type char." );
                     parser.errNo++;
                 }
                 else{
@@ -336,16 +336,16 @@ Allocation ::= EXECUTED_BY ID:id
             Variable var = parser.symbolTable.getVar( id );
             if ( var == null )
             {
-                System.out.println( "Greska u liniji " + parser.getLine() + 
-                    ": promenljiva " + id + " nije deklarisana.");
+                System.out.println( "Error at line " + parser.getLine() + 
+                    ": variable " + id + " is not declared.");
                 parser.errNo++;
             }
             else 
             {
                 if ( var.type.tkind != Type.STRING )
                 {
-                    System.out.println( "Greska u liniji " + parser.getLine() + 
-                        ": Identifikator servera mora biti tipa string." );
+                    System.out.println( "Error at line " + parser.getLine() + 
+                        ": Server identifier must be of type string." );
                     parser.errNo++;
                 }
                 else{
@@ -372,16 +372,16 @@ Response ::= SCALE Term:t
             Variable var = parser.symbolTable.getVar( id );
             if ( var == null )
             {
-                System.out.println( "Greska u liniji " + parser.getLine() + 
-                    ": promenljiva " + id + " nije deklarisana.");
+                System.out.println( "Error at line " + parser.getLine() + 
+                    ": variable " + id + " is not declared.");
                 parser.errNo++;
             }
             else 
             {
                 if ( var.type.tkind != Type.STRING )
                 {
-                    System.out.println( "Greska u liniji " + parser.getLine() + 
-                        ": Identifikator servera mora biti tipa string." );
+                    System.out.println( "Error at line " + parser.getLine() + 
+                        ": Server identifier must be of type string." );
                     parser.errNo++;
                 }
                 else{

@@ -1,9 +1,9 @@
-// Import sekcija
+// Import section
 import java_cup.runtime.*;
 
 %%
 
-// Sekcija opcija i deklaracija
+// Options and declarations section
 %class MPLexer
 
 %cup
@@ -11,12 +11,12 @@ import java_cup.runtime.*;
 %line
 %column
 
-// Konstruktor
+// Constructor
 %eofval{
     return new Symbol( sym.EOF );
 %eofval}
 
-// Dodatne članice klase
+// Additional class members
 %{
     public int getLine()
     {
@@ -24,46 +24,46 @@ import java_cup.runtime.*;
     }
 %}
 
-// Stanja
+// States
 %state COMMENT
 
-// Makroi
-cifra = [0-9]
-niz_cifara = (0|[1-9]{cifra}*)
-slovo = [A-Za-z]
-znak = ({cifra}|{slovo})
-niz_znakova = {znak}+
+// Macros
+digit = [0-9]
+digit_seq = (0|[1-9]{digit}*)
+letter = [A-Za-z]
+char = ({digit}|{letter})
+char_seq = {char}+
 
 %%
 
-// Sekcija pravila
+// Rules section
 
-// Komentar
+// Comment
 "<-comm"                        { yybegin( COMMENT ); }
 <COMMENT>~"comm->"               { yybegin( YYINITIAL ); }
 
-// Tabulatori
+// Whitespace
 [\t\n\r ] 			            { ; }
 
 
-// Zagrade
+// Brackets
 \(                              { return new Symbol( sym.OPEN_BRACKET ); }
 \)                              { return new Symbol( sym.CLOSE_BRACKET ); }
 \{                              { return new Symbol( sym.OPEN_CURLY_BRACKET ); }
 \}                              { return new Symbol( sym.CLOSE_CURLY_BRACKET ); }
 
 
-// Operatori
+// Operators
 \+                              { return new Symbol( sym.PLUS ); }
 \*                              { return new Symbol( sym.MULTIPLY ); }
 =                               { return new Symbol( sym.ASSIGN ); }
 
 
-// Separatori
+// Separators
 ;                               { return new Symbol( sym.SEMICOLON ); }
 
 
-// Kljucne reci
+// Keywords
 
 "strategy"                      {   return new Symbol( sym.STRATEGY_BEGIN );    }
 "~strategy"                     {   return new Symbol( sym.STRATEGY_END );      }
@@ -89,25 +89,25 @@ niz_znakova = {znak}+
 "redeployOn"                    {   return new Symbol( sym.REDEPLOY_ON );       }
 "optimize"                      {   return new Symbol( sym.OPTIMIZE );          }
 
-// Konstante
+// Constants
 
 // bool
 "true"|"false"                  { return new Symbol( sym.BOOLCONST, Boolean.parseBoolean( yytext() ) ); }
 
 // int
-[-]?{niz_cifara}                { return new Symbol( sym.INTCONST, Integer.parseInt( yytext() ) ); }
+[-]?{digit_seq}                { return new Symbol( sym.INTCONST, Integer.parseInt( yytext() ) ); }
 
 // double
-[-]?{niz_cifara}\.{niz_cifara}  { return new Symbol( sym.DOUBLECONST, Double.parseDouble( yytext() ) ); }
+[-]?{digit_seq}\.{digit_seq}  { return new Symbol( sym.DOUBLECONST, Double.parseDouble( yytext() ) ); }
 
 // string
-\"{niz_znakova}\"               { return new Symbol( sym.STRINGCONST, yytext() ); }
+\"{char_seq}\"               { return new Symbol( sym.STRINGCONST, yytext() ); }
 
 // char
-'{znak}'                        { return new Symbol( sym.CHARCONST, yytext() ); }
+'{char}'                        { return new Symbol( sym.CHARCONST, yytext() ); }
 
-// ID-evi
-{slovo}({slovo}|{cifra})*       { return new Symbol( sym.ID, yytext() ); }
+// IDs
+{letter}({letter}|{digit})*       { return new Symbol( sym.ID, yytext() ); }
 
-// Greska
+// Error
 .  { if (yytext() != null && yytext().length() > 0) System.out.println( "Error at ln: " + yyline + ", column: " + yycolumn + " -- " + yytext() ); }
